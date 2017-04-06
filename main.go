@@ -15,6 +15,7 @@ import (
 	"github.com/davecgh/go-spew/spew"
 )
 
+// Microsoft RSA Format
 // <RSAKeyValue>
 //    <Modulus>…</Modulus>
 //    <Exponent>…</Exponent>
@@ -25,6 +26,20 @@ import (
 //    <InverseQ>…</InverseQ>
 //    <D>…</D>
 // </RSAKeyValue>
+
+// ASN.1 PKCS#1
+// RSAPrivateKey ::= SEQUENCE {
+//     version           Version,
+//     modulus           INTEGER,  -- n
+//     publicExponent    INTEGER,  -- e
+//     privateExponent   INTEGER,  -- d
+//     prime1            INTEGER,  -- p
+//     prime2            INTEGER,  -- q
+//     exponent1         INTEGER,  -- d mod (p-1)
+//     exponent2         INTEGER,  -- d mod (q-1)
+//     coefficient       INTEGER,  -- (inverse of q) mod p
+//     otherPrimeInfos   OtherPrimeInfos OPTIONAL
+// }
 
 type rsaParameters struct {
 	XMLName  xml.Name `xml:"RSAKeyValue"`
@@ -82,25 +97,6 @@ func rsaToPEM(key *rsa.PrivateKey) string {
 }
 
 func xmlToRSA(pkXML *rsaParameters) *rsa.PrivateKey {
-	// (*rsa.PrivateKey)(0xc4200723c0)({
-	//  PublicKey: (rsa.PublicKey) {
-	//   N: (*big.Int)(0xc42000c760)(302267542762161784760758685397913542247),
-	//   E: (int) 65537
-	//  },
-	//  D: (*big.Int)(0xc42000c780)(256782358717722162513073789955570047873),
-	//  Primes: ([]*big.Int) (len=2 cap=2) {
-	//   (*big.Int)(0xc42000c7a0)(17439525864715128359),
-	//   (*big.Int)(0xc42000c7c0)(17332325724160349633)
-	//  },
-	//  Precomputed: (rsa.PrecomputedValues) {
-	//   Dp: (*big.Int)(0xc42000c860)(17172625572631125829),
-	//   Dq: (*big.Int)(0xc42000c880)(9415263562656707009),
-	//   Qinv: (*big.Int)(0xc42000c8a0)(8750017907401368731),
-	//   CRTValues: ([]rsa.CRTValue) {
-	//   }
-	//  }
-	// })
-
 	pk := new(rsa.PrivateKey)
 
 	pk.PublicKey = rsa.PublicKey{}
@@ -160,19 +156,6 @@ func rsaToXML(pk *rsa.PrivateKey) (pkXML *rsaParameters) {
 
 	return rsaKey
 }
-
-// RSAPrivateKey ::= SEQUENCE {
-//     version           Version,
-//     modulus           INTEGER,  -- n
-//     publicExponent    INTEGER,  -- e
-//     privateExponent   INTEGER,  -- d
-//     prime1            INTEGER,  -- p
-//     prime2            INTEGER,  -- q
-//     exponent1         INTEGER,  -- d mod (p-1)
-//     exponent2         INTEGER,  -- d mod (q-1)
-//     coefficient       INTEGER,  -- (inverse of q) mod p
-//     otherPrimeInfos   OtherPrimeInfos OPTIONAL
-// }
 
 func toBase64(i interface{}) (b64 string) {
 	switch t := i.(type) {
