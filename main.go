@@ -1,11 +1,9 @@
 package main
 
 import (
-	"bytes"
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/base64"
-	"encoding/binary"
 	"encoding/pem"
 	"encoding/xml"
 	"fmt"
@@ -40,6 +38,14 @@ type rsaParameters struct {
 	InverseQ string   `xml:"InverseQ,omitempty"`
 }
 
+func (pkXML *rsaParameters) toString() (xmlString string) {
+	xmlOutput, err := xml.MarshalIndent(pkXML, "", "  ")
+	if err != nil {
+		fmt.Printf("error: %v\n", err)
+	}
+	return string(xmlOutput)
+}
+
 func main() {
 	keyBytes, err := ioutil.ReadFile("128.key")
 	if err != nil {
@@ -55,10 +61,15 @@ func main() {
 
 	fmt.Printf("priv_key:\n---------\n\n%+v\n\n", privKey)
 	fmt.Print(spew.Sdump(privKey))
-	rsaToXML(privKey)
+	pkXML := rsaToXML(privKey)
+	fmt.Println(pkXML.toString())
+
+	backToRSA := xmlToRSA(pkXML)
+	fmt.Print(spew.Sdump(privKey))
+	fmt.Print(spew.Sdump(backToRSA))
 }
 
-func xmlToRSA(xml *rsaParameters) (pk *rsa.PrivateKey) {
+func xmlToRSA(pkXML *rsaParameters) *rsa.PrivateKey {
 	// (*rsa.PrivateKey)(0xc4200723c0)({
 	//  PublicKey: (rsa.PublicKey) {
 	//   N: (*big.Int)(0xc42000c760)(302267542762161784760758685397913542247),
@@ -78,18 +89,22 @@ func xmlToRSA(xml *rsaParameters) (pk *rsa.PrivateKey) {
 	//  }
 	// })
 
-	pk.PublicKey.N = base64ToBigInt(xml.Modulus)
-	pk.PublicKey.E = base64ToInt(xml.Exponent)
-	pk.D = base64ToBigInt(xml.D)
-	pk.Primes = append(pk.Primes, base64ToBigInt(xml.P))
-	pk.Primes = append(pk.Primes, base64ToBigInt(xml.Q))
-	pk.Precomputed.Dp = base64ToBigInt(xml.DP)
-	pk.Precomputed.Dq = base64ToBigInt(xml.DQ)
+	pk := new(rsa.PrivateKey)
+
+	pk.PublicKey = rsa.PublicKey{}
+	pk.PublicKey.N = base64ToBigInt(pkXML.Modulus)
+	pk.PublicKey.E = base64ToInt(pkXML.Exponent)
+	pk.D = base64ToBigInt(pkXML.D)
+	pk.Primes = append(pk.Primes, base64ToBigInt(pkXML.P))
+	pk.Primes = append(pk.Primes, base64ToBigInt(pkXML.Q))
+	pk.Precomputed.Dp = base64ToBigInt(pkXML.DP)
+	pk.Precomputed.Dq = base64ToBigInt(pkXML.DQ)
+	pk.Precomputed.Qinv = base64ToBigInt(pkXML.InverseQ)
 
 	return pk
 }
 
-func rsaToXML(pk *rsa.PrivateKey) {
+func rsaToXML(pk *rsa.PrivateKey) (pkXML *rsaParameters) {
 	var n, e, d, p, q, dp, dq, qinv string
 
 	n = toBase64(pk.PublicKey.N)
@@ -129,14 +144,9 @@ func rsaToXML(pk *rsa.PrivateKey) {
 		DQ:       dq,
 		InverseQ: qinv,
 	}
-
-	xmlOutput, err := xml.MarshalIndent(rsaKey, "", "  ")
-	if err != nil {
-		fmt.Printf("error: %v\n", err)
-	}
-	fmt.Println(string(xmlOutput))
-
 	fmt.Print(spew.Sdump(rsaKey))
+
+	return rsaKey
 }
 
 // RSAPrivateKey ::= SEQUENCE {
@@ -157,8 +167,11 @@ func toBase64(i interface{}) (b64 string) {
 	case string:
 		b64 = base64.StdEncoding.EncodeToString([]byte(t))
 	case int:
+		fmt.Println("int:", t)
 		bytes := []byte(strconv.Itoa(t))
+		fmt.Println("int []bytes:", bytes)
 		b64 = base64.StdEncoding.EncodeToString(bytes)
+		fmt.Println("int encoded base64:", b64)
 	case *big.Int:
 		b64 = base64.StdEncoding.EncodeToString(t.Bytes())
 	default:
@@ -168,18 +181,16 @@ func toBase64(i interface{}) (b64 string) {
 	return b64
 }
 
-func base64ToBigInt(b64 string) (i *big.Int) {
+func base64ToBigInt(b64 string) *big.Int {
 	stdDec, _ := base64.StdEncoding.DecodeString(b64)
+	i := new(big.Int)
 	i.SetBytes(stdDec)
 	return i
 }
 
 func base64ToInt(b64 string) (i int) {
 	stdDec, _ := base64.StdEncoding.DecodeString(b64)
-	buf := bytes.NewReader(stdDec)
-	err := binary.Read(buf, binary.LittleEndian, &i)
-	if err != nil {
-		fmt.Println("binary.Read failed:", err)
-	}
+	i, _ = strconv.Atoi(string(stdDec))
+
 	return i
 }
