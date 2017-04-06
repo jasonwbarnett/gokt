@@ -67,6 +67,18 @@ func main() {
 	backToRSA := xmlToRSA(pkXML)
 	fmt.Print(spew.Sdump(privKey))
 	fmt.Print(spew.Sdump(backToRSA))
+
+	fmt.Println(rsaToPEM(backToRSA))
+}
+
+func rsaToPEM(key *rsa.PrivateKey) string {
+	pemdata := pem.EncodeToMemory(
+		&pem.Block{
+			Type:  "RSA PRIVATE KEY",
+			Bytes: x509.MarshalPKCS1PrivateKey(key),
+		},
+	)
+	return string(pemdata)
 }
 
 func xmlToRSA(pkXML *rsaParameters) *rsa.PrivateKey {
