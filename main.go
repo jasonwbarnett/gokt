@@ -32,6 +32,7 @@ type rsaParameters struct {
 	XMLName  xml.Name `xml:"RSAKeyValue"`
 	Modulus  string   `xml:"Modulus,omitempty"`
 	Exponent string   `xml:"Exponent,omitempty"`
+	D        string   `xml:"D,omitempty"`
 	P        string   `xml:"P,omitempty"`
 	Q        string   `xml:"Q,omitempty"`
 	DP       string   `xml:"DP,omitempty"`
@@ -77,7 +78,13 @@ func xmlToRSA(xml *rsaParameters) (pk *rsa.PrivateKey) {
 	//  }
 	// })
 
-	pk.D = xml.Exponent
+	pk.PublicKey.N = base64ToBigInt(xml.Modulus)
+	pk.PublicKey.E = base64ToInt(xml.Exponent)
+	pk.D = base64ToBigInt(xml.D)
+	pk.Primes = append(pk.Primes, base64ToBigInt(xml.P))
+	pk.Primes = append(pk.Primes, base64ToBigInt(xml.Q))
+	pk.Precomputed.Dp = base64ToBigInt(xml.DP)
+	pk.Precomputed.Dq = base64ToBigInt(xml.DQ)
 
 	return pk
 }
@@ -115,6 +122,7 @@ func rsaToXML(pk *rsa.PrivateKey) {
 	rsaKey := &rsaParameters{
 		Modulus:  n,
 		Exponent: e,
+		D:        d,
 		P:        p,
 		Q:        q,
 		DP:       dp,
