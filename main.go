@@ -32,8 +32,10 @@ func main() {
 	if *outputFilename == "" {
 		os.Stderr.WriteString("Converted " + *inputFilename + ":\n")
 		fmt.Print(string(gokt_utils.RSAPrivateKeyToEncodedPEM(RSA)))
+		fmt.Print(string(gokt_utils.RSAPublicKeyToEncodedPEM(RSA)))
 	} else {
 		os.Stderr.WriteString("Saving to " + *outputFilename + "\n")
-		ioutil.WriteFile(*outputFilename, gokt_utils.RSAPrivateKeyToEncodedPEM(RSA), 0644)
+		ioutil.WriteFile(*outputFilename, gokt_utils.RSAPrivateKeyToEncodedPEM(RSA), 0600)
+		ioutil.WriteFile(*outputFilename+".pub", gokt_utils.RSAPrivateKeyToEncodedPEM(RSA), 0600)
 	}
 }

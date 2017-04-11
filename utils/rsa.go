@@ -20,6 +20,24 @@ func RSAPrivateKeyToEncodedPEM(key *rsa.PrivateKey) []byte {
 			Bytes: x509.MarshalPKCS1PrivateKey(key),
 		},
 	)
+
+	return pemdata
+}
+
+// RSAPublicKeyToEncodedPEM convert *rsa.PrivateKey to a pem block ([]byte)
+func RSAPublicKeyToEncodedPEM(key *rsa.PrivateKey) []byte {
+	PubASN1, err := x509.MarshalPKIXPublicKey(&key.PublicKey)
+	if err != nil {
+		var empty []byte
+		return empty
+	}
+
+	pemdata := pem.EncodeToMemory(
+		&pem.Block{
+			Type:  "RSA PUBLIC KEY",
+			Bytes: PubASN1,
+		},
+	)
 	return pemdata
 }
 
