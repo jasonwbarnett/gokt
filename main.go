@@ -36,6 +36,6 @@ func main() {
 	} else {
 		os.Stderr.WriteString("Saving to " + *outputFilename + "\n")
 		ioutil.WriteFile(*outputFilename, gokt_utils.RSAPrivateKeyToEncodedPEM(RSA), 0600)
-		ioutil.WriteFile(*outputFilename+".pub", gokt_utils.RSAPrivateKeyToEncodedPEM(RSA), 0600)
+		ioutil.WriteFile(*outputFilename+".pub", gokt_utils.RSAPublicKeyToEncodedPEM(RSA), 0644)
 	}
 }
