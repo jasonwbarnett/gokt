@@ -63,6 +63,9 @@ func (r *RSAParameters) GetRSAPrivateKey() *rsa.PrivateKey {
 
 	pk.PublicKey.N = base64ToBigInt(r.Modulus)
 	pk.PublicKey.E = base64ToInt(r.Exponent)
+	if pk.PublicKey.E == 0 {
+		pk.PublicKey.E = 65537
+	}
 	pk.D = base64ToBigInt(r.D)
 	pk.Primes = append(pk.Primes, base64ToBigInt(r.P))
 	pk.Primes = append(pk.Primes, base64ToBigInt(r.Q))
