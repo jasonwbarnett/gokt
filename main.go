@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/davecgh/go-spew/spew"
 	gokt_utils "github.com/jasonwbarnett/gokt/utils"
 	flag "github.com/spf13/pflag"
 )
@@ -13,6 +14,7 @@ func main() {
 	inputFilename := flag.String("in", "", "input file")
 	inputFileBase64 := flag.Bool("b64", false, "use this flag if the input file is base64 encoded")
 	outputFilename := flag.String("out", "", "the output filename. If this argument is not specified then standard output is used.")
+	debug := flag.Bool("debug", false, "debug output")
 	flag.Parse()
 
 	if *inputFilename == "" {
@@ -28,6 +30,10 @@ func main() {
 	}
 
 	RSA := msRSA.GetRSAPrivateKey()
+	if *debug == true {
+		fmt.Print(spew.Sdump(msRSA))
+		fmt.Print(spew.Sdump(RSA))
+	}
 
 	if *outputFilename == "" {
 		os.Stderr.WriteString("Converted " + *inputFilename + ":\n")
